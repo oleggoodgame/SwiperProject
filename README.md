@@ -1,16 +1,3 @@
 # swiper
 
-A new Flutter project.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+A new Flutter project. It's just twelve project. BUT I'll add some more things, but here's a strange point, I would say a bug, there's a little lag when swiping, I think because of the heavy use of set_state(), I'll try to fix it in the future
