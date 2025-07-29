@@ -18,7 +18,6 @@ class CharacterListNotifier extends StateNotifier<List<Character>> {
   }
 }
 
-// Provider з початковим пустим списком
 final characterListProvider =
     StateNotifierProvider<CharacterListNotifier, List<Character>>(
   (ref) => CharacterListNotifier(characters),

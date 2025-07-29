@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:swiper/data/data.dart';
+import 'package:swiper/provider/animation_provider.dart';
 import 'package:swiper/provider/characters_provider.dart';
 import 'package:swiper/provider/favorite_provider.dart';
 import 'package:swiper/widgets/ChooseCard.dart';
@@ -14,14 +15,13 @@ class ChooseScreen extends ConsumerStatefulWidget {
 
 class _ChooseScreenState extends ConsumerState<ChooseScreen>
     with TickerProviderStateMixin {
-  int _index = 0;
-  Offset _dragOffset = Offset
-      .zero; //Offset — це клас, який зберігає зсув (відстань) по горизонталі (X) та вертикалі (Y).
+  //Offset — це клас, який зберігає зсув (відстань) по горизонталі (X) та вертикалі (Y).
   //Тобто: Offset(50, 20) означає, що елемент буде зміщено на 50 пікселів вправо і на 20 пікселів вниз.
   late List<Character> listCharacters;
 
   late AnimationController _controller;
   late Animation<Offset> _slideAnimation;
+int _index = 0;
   @override
   void initState() {
     super.initState();
@@ -30,8 +30,9 @@ class _ChooseScreenState extends ConsumerState<ChooseScreen>
     listCharacters = [...characters];
     listCharacters.shuffle();
     _controller = AnimationController(
-      vsync: this,
-      duration: Duration(milliseconds: 800),
+      vsync:
+          this, // означає, що цей клас знає, коли кадри оновлюються (завдяки TickerProviderStateMixin)
+      duration: Duration(milliseconds: 800), // скільки триває анімація
     );
 
     playAnimation();
@@ -45,31 +46,47 @@ class _ChooseScreenState extends ConsumerState<ChooseScreen>
 
   void playAnimation() {
     _controller.reset();
-    _slideAnimation = Tween<Offset>(
-      begin: Offset(0, 1.5),
-      end: Offset(0, 0),
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
-    _controller.forward();
+    _slideAnimation = Tween<Offset>(begin: Offset(0, 1.5), end: Offset(0, 0))
+        .animate(
+          CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
+        ); // налаштування до анімації
+    _controller.forward(); //Це запускає анімацію.
   }
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(chooseScreenProvider);
+    final notifier = ref.read(chooseScreenProvider.notifier);
+
+    final _dragOffset = state.dragOffset;
     final screenWidth = MediaQuery.of(context).size.width;
     double opacity = (_dragOffset.dx.abs() / screenWidth).clamp(
       0.0,
       1.0,
     ); //  Це означає: чим далі ти тягнеш картку, тим менш прозорий стає напис LIKE / DISLIKE.
     bool isRight = _dragOffset.dx > 0;
-    if (_index >= listCharacters.length) {
+    int fifi = _index+1;
+    if (fifi > listCharacters.length) {
       return const Center(child: Text("There is nothing"));
     }
-
+    print("----");
+    print(listCharacters.length);
+    print("----");
+    print(_index);
+    print("----");
+    print(ref.read(chooseScreenProvider).index);
+    print("----");
     return GestureDetector(
       onPanUpdate: (details) {
+        // Це об'єкт типу DragUpdateDetails, який:
+
+        // містить інформацію про рух пальця на екрані,
+
+        // має details.delta, що каже, наскільки палець зсунувся від попередньої позиції.
         // onPanUpdate викликається кожен раз, коли палець рухається по екрану.
-        setState(() {
-          _dragOffset += details.delta;
-        });
+        notifier.updateOffset(
+          ref.read(chooseScreenProvider).dragOffset + details.delta,
+        );
       },
       onPanEnd: (details) {
         if (_dragOffset.dx.abs() > 150) {
@@ -81,17 +98,13 @@ class _ChooseScreenState extends ConsumerState<ChooseScreen>
                 .read(characterListProvider.notifier)
                 .removeCharacter(listCharacters[_index]);
           }
-
-          setState(() {
-            _index++;
-            _dragOffset = Offset.zero;
-            playAnimation(); // ✅ Ось це головне
-          });
+          
+          notifier.nextIndex();
+          playAnimation();
         } else {
-          setState(() {
-            _dragOffset = Offset.zero;
-          });
+          notifier.resetOffset();
         }
+        _index++;
       },
 
       child: Transform.translate(
@@ -99,7 +112,6 @@ class _ChooseScreenState extends ConsumerState<ChooseScreen>
         offset: _dragOffset,
         child: Stack(
           children: [
-            // Карта персонажа
             SlideTransition(
               position: _slideAnimation,
               child: Choosecard(character: listCharacters[_index]),
@@ -108,6 +120,7 @@ class _ChooseScreenState extends ConsumerState<ChooseScreen>
             // Overlay: LIKE / DISLIKE
             if (_dragOffset.dx != 0)
               Positioned(
+                // Цей віджет дозволяє розмістити елемент точно вказаними координатами всередині Stack
                 top: 40,
                 left: isRight ? 20 : null,
                 right: isRight ? null : 20,
@@ -122,6 +135,7 @@ class _ChooseScreenState extends ConsumerState<ChooseScreen>
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Row(
+                      // поясни це детальніше
                       children: [
                         Icon(
                           isRight ? Icons.thumb_up : Icons.thumb_down,

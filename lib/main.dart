@@ -8,6 +8,8 @@ void main() {
 }
 
 class App extends ConsumerWidget {
+  const App({super.key});
+  
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeProvider);
@@ -55,6 +57,8 @@ class App extends ConsumerWidget {
 }
 
 class SwipeUpWidget extends StatefulWidget {
+  const SwipeUpWidget({super.key});
+
   @override
   State<SwipeUpWidget> createState() => _SwipeUpWidgetState();
 }
